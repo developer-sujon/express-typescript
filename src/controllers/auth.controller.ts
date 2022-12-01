@@ -24,7 +24,7 @@ export const register = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const { name, fatherName, company, address, nid, mobile } = req.body;
+  const { name, fatherName, company, address, nid, mobile, ownerId } = req.body;
 
   const session = await mongoose.startSession();
 
@@ -40,6 +40,7 @@ export const register = async (
       address,
       nid,
       mobile,
+      ownerId,
     });
 
     await newOwner.save({ session });
@@ -48,7 +49,7 @@ export const register = async (
     await session.endSession();
 
     res.send({
-      message: req.t('User Register Successfull'),
+      message: req.t('User Register Successfully'),
     });
   } catch (error) {
     await session.abortTransaction();
@@ -72,8 +73,8 @@ export const login = catchAsync(async (req: any, res: Response) => {
     password
   );
 
-  const { _id, ...others } = user[0];
-  const token = await createToken({ _id });
+  const { _id, ownerId, ...others } = user[0];
+  const token = await createToken({ _id, ownerId });
 
   res.send({
     message: req.t('User Login Successfull'),
@@ -119,7 +120,7 @@ export const verifyForgetToken = catchAsync(async (req: any, res: Response) => {
   await authService.verifyForgetTokenService(token, email);
 
   res.send({
-    message: req.t('Email verify Successfull'),
+    message: req.t('Email verify Successfully'),
     token: token,
   });
 });
@@ -138,7 +139,7 @@ export const resetPasswordToken = catchAsync(
     await authService.resetPasswordTokenService(token, email, password);
 
     res.send({
-      message: req.t('Password Reset Successfull'),
+      message: req.t('Password Reset Successfully'),
       token: token,
     });
   }

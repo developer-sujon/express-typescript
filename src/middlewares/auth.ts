@@ -28,6 +28,7 @@ const auth =
       if (!decoded) {
         return next(new CustomError(httpStatus.UNAUTHORIZED, 'Invalid token.'));
       }
+
       const user = await userService.userDetailsByPropertyService({
         _id: new mongoose.Types.ObjectId(decoded._id),
       });
@@ -37,7 +38,9 @@ const auth =
           new CustomError(httpStatus.UNAUTHORIZED, 'Not authorized.')
         );
       }
+
       req.id = decoded._id;
+      req.ownerId = decoded.ownerId;
       next();
     } catch (err) {
       return next(new CustomError(httpStatus.UNAUTHORIZED, 'Invalid token.'));

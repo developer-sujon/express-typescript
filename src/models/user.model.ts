@@ -1,17 +1,18 @@
 //External Lib Import
-import mongoose, { Schema, model } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 //Internal Lib  import
 import { roles } from '../config/roles';
 import { IUser } from '../interfaces/user.interface';
-import { hashPassword, verifyPassword } from '../utils/bcrypt';
+import { hashPassword } from '../utils/bcrypt';
 
 const userSchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: true,
       trim: true,
+      max: 50,
+      required: true,
     },
     mobile: {
       type: String,

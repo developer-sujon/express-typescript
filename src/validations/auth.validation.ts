@@ -6,6 +6,7 @@ import { password, mobile, objectId, email } from './custom.validation';
 
 export const register = {
   body: Joi.object().keys({
+    ownerId: Joi.string().custom(objectId),
     name: Joi.string().max(50).required(),
     mobile: Joi.string().custom(mobile).required(),
     email: Joi.string().custom(email).required(),

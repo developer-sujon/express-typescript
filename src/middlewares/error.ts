@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import httpStatus from 'http-status';
 import { IS_PRODUCTION, IS_TEST } from '../config/config';
 import logger from '../config/logger';
+import capitalizeFirstLetter from '../helpers/capitalizeFirstLetter';
 
 export const errorConverter = (err: any, req: any, res: any, next: any) => {
   let error = err;
@@ -27,7 +28,7 @@ export const errorHandler = (err: any, req: any, res: any, next: any) => {
 
   res.locals.errorMessage = err.message;
 
-  message = req.t(message);
+  message = req.t(capitalizeFirstLetter(message));
 
   const response = {
     code: statusCode,

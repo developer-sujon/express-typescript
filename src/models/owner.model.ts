@@ -4,6 +4,12 @@ import mongoose, { Schema, model } from 'mongoose';
 
 const ownerSchema = new Schema(
   {
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+      required: true,
+      auto: true,
+    },
     userId: {
       type: mongoose.Types.ObjectId,
       ref: 'User',

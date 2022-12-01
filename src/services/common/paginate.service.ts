@@ -5,19 +5,16 @@ const ObjectId = mongoose.Types.ObjectId;
 const paginateService = async (
   rqequest: any,
   dataModel: any,
-  searchArray: [],
-  projection: {}
+  searchArray: object[]
 ) => {
   const ownerId = rqequest.ownerId;
-  const { searchKeyword, pageNumber, perPage } = rqequest.params;
-
+  const searchKeyword = rqequest.params.searchKeyword;
+  const pageNumber = +rqequest.params.pageNumber;
+  const perPage = +rqequest.params.perPage;
   const skipRow = (pageNumber - 1) * perPage;
 
   if (searchKeyword !== '0') {
     return await dataModel.aggregate([
-      {
-        $match: { ownerId: new ObjectId(ownerId) },
-      },
       {
         $match: { $or: searchArray },
       },
@@ -28,7 +25,6 @@ const paginateService = async (
             { $sort: { _id: -1 } },
             { $skip: skipRow },
             { $limit: perPage },
-            projection,
           ],
         },
       },
@@ -36,7 +32,7 @@ const paginateService = async (
   } else {
     return await dataModel.aggregate([
       {
-        $match: { ownerId: ownerId },
+        $match: { ownerId: new ObjectId(ownerId) },
       },
       {
         $facet: {
@@ -45,7 +41,6 @@ const paginateService = async (
             { $sort: { _id: -1 } },
             { $skip: skipRow },
             { $limit: perPage },
-            projection,
           ],
         },
       },

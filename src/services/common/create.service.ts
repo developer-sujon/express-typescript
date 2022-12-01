@@ -1,5 +1,4 @@
-const createService = async (request: any, dataModel: any) => {
-  const postBody = request.body;
+const createService = async (request: any, dataModel: any, postBody: any) => {
   postBody.ownerId = request.ownerId;
 
   const data = new dataModel(postBody);

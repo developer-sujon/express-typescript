@@ -14,7 +14,7 @@ export const userCreateService = async (
   const existingUser = await userDetailsByPropertyService({ mobile });
 
   if (existingUser.length > 0) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'User is Already Register');
+    throw new CustomError(httpStatus.BAD_REQUEST, 'User is Already Registered');
   }
 
   const newUser = new UserModel({
@@ -33,6 +33,26 @@ export const userDetailsByPropertyService = async (
   return await UserModel.aggregate([
     {
       $match: matchQuery,
+    },
+    {
+      $lookup: {
+        from: 'owners',
+        localField: '_id',
+        foreignField: 'userId',
+        as: 'owner',
+      },
+    },
+    {
+      $project: {
+        ownerId: { $first: '$owner.ownerId' },
+        name: 1,
+        mobile: 1,
+        email: 1,
+        password: 1,
+        role: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
     },
   ]);
 };
