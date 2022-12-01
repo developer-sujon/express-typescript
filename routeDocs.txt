@@ -1,0 +1,22 @@
+Auth Routes: {
+    register=/v1/auth/register-> accept{
+        name, mobile,password
+    },
+
+    login=/v1/auth/login->accept{
+        mobile,password
+    }
+
+    updateUser=v1/users/userId->{
+        accept{
+            name,mobile
+        }
+    }
+}
+
+
+owner:{
+    register=v1/owner/register->accept{
+        name,fatherName.address,nid,mobile
+    }
+}

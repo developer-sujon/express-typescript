@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+  - '19'
+services:
+  - mongodb
+cache: yarn
+branches:
+  only:
+    - main
+env:
+  global:
+    - APP_PORT=9000
+    - DB_URI=mongodb://localhost:27017/shunno
+    - JWT_SECRET=shunnosd@234284__234
+script:
+  - yarn test
+  - yarn test:e2e
+after_success: yarn coverage:coveralls

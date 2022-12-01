@@ -1,0 +1,19 @@
+{
+  "User Register Successfull": "সফল অনুরোধ।",
+  "User Login Successfull": "ব্যবহারকারী লগইন সফল।",
+  "User is Already Register": "এই মোবাইল নাম্বারটি অন্য একটি একাউন্টে ব্যাবহারিত হচ্ছে।",
+  "Please enter the correct number": "number ভুল হয়েছে।",
+  "Password must be at least 8 digits long": "পাসওয়ার্ড ভুল হয়েছে least 8।",
+  "The password is incorrect": "পাসওয়ার্ড ভুল হয়েছে।",
+  "Please login to access this resource": "এই সম্পদ অ্যাক্সেস করতে লগইন করুন।",
+  "No users found with this email": "No users পাওয়া যায়নি",
+  "Verification link has been sent to your email address.": "Verification link সফল",
+  "Invalid token.": "অবৈধ টোকেন।",
+  "Not authorized.": "অনুমোদিত না।",
+  "Verify Token Not Valid": "Invalid Token পাওয়া যায়নি",
+  "Verify Token already Use": "already Us যায়নি",
+  "Mobile number not found": "মোবাইল নম্বর খুঁজে পাওয়া যায়নি",
+  "Verify Token expire": "expire যায়নি",
+  "Email verify Successfull": "Email verify সফল।",
+  "Password Reset Successfull": "Password সফল অনুরোধ।"
+}
