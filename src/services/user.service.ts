@@ -1,58 +1,78 @@
 //External Lib Import
 import httpStatus from 'http-status';
+import { ObjectId } from 'mongodb';
 
 //Internal Lib Import
+import User from '../models/user.model';
 import CustomError from '../helpers/CustomError';
-import UserModel from '../models/user.model';
+import { IUser } from '../interfaces/user.interface';
 
-export const userCreateService = async (
-  postBody: any = {},
+/**
+ * Create a user
+ */
+export const createUser = async (
+  userBody: any,
   session: any
-): Promise<any> => {
-  const { name, mobile, password, email } = postBody;
+): Promise<IUser> => {
+  userBody.password = 'pass1234';
 
-  const existingUser = await userDetailsByPropertyService({ mobile });
-
-  if (existingUser.length > 0) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'User is Already Registered');
+  if (await User.isEmailTaken(userBody.email)) {
+    throw new CustomError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  if (await User.isMobileTaken(userBody.mobile)) {
+    throw new CustomError(httpStatus.BAD_REQUEST, 'Mobile already taken');
   }
 
-  const newUser = new UserModel({
-    name,
-    mobile,
-    password,
-    email,
-  });
-
-  return await newUser.save({ session });
+  if (session) {
+    return new User(userBody).save({ session });
+  } else {
+    return User.create(userBody);
+  }
 };
 
-export const userDetailsByPropertyService = async (
-  matchQuery: any = {}
-): Promise<any> => {
-  return await UserModel.aggregate([
-    {
-      $match: matchQuery,
-    },
-    {
-      $lookup: {
-        from: 'owners',
-        localField: '_id',
-        foreignField: 'userId',
-        as: 'owner',
-      },
-    },
-    {
-      $project: {
-        ownerId: { $first: '$owner.ownerId' },
-        name: 1,
-        mobile: 1,
-        email: 1,
-        password: 1,
-        role: 1,
-        createdAt: 1,
-        updatedAt: 1,
-      },
-    },
-  ]);
+/**
+ * Get user by id
+ */
+export const getUserById = async (id: ObjectId) => {
+  return User.findById(id);
+};
+
+/**
+ * Get user by email
+ */
+export const getUserByEmail = async (email: string) => {
+  return User.findOne({ email });
+};
+
+/**
+ * Get user by mobile
+ */
+export const getUserByMobile = async (mobile: string) => {
+  return User.findOne({ mobile });
+};
+
+/**
+ * Get user by property
+ */
+export const userDetailsByPropertyService = async (property: any) => {
+  return User.findOne({ property });
+};
+
+/**
+ * Update user by id
+ */
+export const updateUserById = async (
+  userId: ObjectId,
+  updateBody: any
+): Promise<IUser> => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new CustomError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  if (updateBody.email && (await User.isEmailTaken(updateBody.email, userId))) {
+    throw new CustomError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  Object.assign(user, updateBody);
+  await user.save();
+  return user;
 };

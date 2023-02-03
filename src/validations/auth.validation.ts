@@ -6,45 +6,23 @@ import { password, mobile, objectId, email } from './custom.validation';
 
 export const register = {
   body: Joi.object().keys({
-    ownerId: Joi.string().custom(objectId),
-    name: Joi.string().max(50).required(),
-    mobile: Joi.string().custom(mobile).required(),
-    email: Joi.string().custom(email).required(),
-    password: Joi.string().required().custom(password),
-    userId: Joi.string().custom(objectId),
-    fatherName: Joi.string().required(),
-    address: Joi.string().required(),
-    nid: Joi.string().max(15).required(),
-    company: Joi.string().max(50).required(),
+    storeName: Joi.string().min(3).max(50).required(),
+    name: Joi.string().min(3).max(30).required(),
+    mobile: Joi.string().required().custom(mobile),
+    email: Joi.string().required().email(),
+    address: Joi.string().min(3).max(100).required(),
+    district: Joi.string().min(3).max(30).required(),
+    thana: Joi.string().min(3).max(30).required(),
+    reference: Joi.object({
+      name: Joi.string().min(3).max(30).required(),
+      mobile: Joi.string().required().custom(mobile),
+    }),
   }),
 };
 
 export const login = {
   body: Joi.object().keys({
-    mobile: Joi.string().custom(mobile).required(),
-    password: Joi.string().required().custom(password),
-  }),
-};
-
-export const fotgetPassword = {
-  params: Joi.object().keys({
-    email: Joi.string().custom(email).required(),
-  }),
-};
-
-export const verifyForgetToken = {
-  params: Joi.object().keys({
-    email: Joi.string().custom(email).required(),
-    token: Joi.string().required(),
-  }),
-};
-
-export const resetPasswordToken = {
-  params: Joi.object().keys({
-    email: Joi.string().custom(email).required(),
-    token: Joi.string().required(),
-  }),
-  body: Joi.object().keys({
+    mobile: Joi.string().required().custom(mobile),
     password: Joi.string().required().custom(password),
   }),
 };
@@ -56,7 +34,28 @@ export const logout = {
 };
 
 export const refreshTokens = {
-  body: Joi.object().keys({
+  params: Joi.object().keys({
     refreshToken: Joi.string().required(),
+  }),
+};
+
+export const forgotPassword = {
+  body: Joi.object().keys({
+    email: Joi.string().email().required(),
+  }),
+};
+
+export const resetPassword = {
+  query: Joi.object().keys({
+    token: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    password: Joi.string().required().custom(password),
+  }),
+};
+
+export const verifyEmail = {
+  query: Joi.object().keys({
+    token: Joi.string().required(),
   }),
 };

@@ -9,10 +9,15 @@ export const IS_PRODUCTION = ENVIRONMENT === 'production';
 export const IS_TEST = ENVIRONMENT === 'test';
 export const APP_PORT = Number(process.env.APP_PORT) || 8080;
 export const APP_PREFIX_PATH = process.env.APP_PREFIX_PATH || '/api/v1';
-export const JWT_SECRET = process.env.JWT_SECRET || 'foo';
-export const JWT_EXPIRE = process.env.JWT_EXPIRE || '1y';
-export const JWT_RESET_PASSWORD_EXPIRE_MINUTUS =
-  process.env.JWT_RESET_PASSWORD_EXPIRE_MINUTUS || 15;
+export const JWT_SECRET = process.env.JWT_SECRET || 'thisisasamplesecret';
+export const JWT_ACCESS_EXPIRATION_MINUTES =
+  process.env.JWT_ACCESS_EXPIRATION_MINUTES || 60;
+export const JWT_REFRESH_EXPIRATION_DAYS =
+  process.env.JWT_REFRESH_EXPIRATION_DAYS || 60;
+export const JWT_RESET_PASSWORD_EXPIRATION_MINUTES =
+  process.env.JWT_RESET_PASSWORD_EXPIRATION_MINUTES || 15;
+export const JWT_VERIFY_EMAIL_EXPIRATION_MINUTES =
+  process.env.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES || 15;
 export const DB = {
   USER: process.env.DB_USER,
   PASSWORD: process.env.DB_USER_PWD,

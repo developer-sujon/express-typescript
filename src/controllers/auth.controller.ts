@@ -1,146 +1,118 @@
 //External Lib Import
-import { Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
+import httpStatus from 'http-status';
 
 //Internal Lib Import
-import * as userService from '../services/user.service';
-import * as authService from '../services/auth.service';
 import catchAsync from '../helpers/catchAsync';
+import * as authService from '../services/auth.service';
+import * as userService from '../services/user.service';
+import * as tokenService from '../services/token.service';
+import * as emailService from '../services/email.service';
+import * as commonService from '../services/common.service';
 
-import OwnerModel from '../models/owner.model';
-import { createToken } from '../utils/jwtToken';
-import { sendMailUtility } from './../utils/sendMailUtility';
-import { APPLICATION_NAME, FORGET_VERIFY_URI } from '../config/config';
-
-/**
- * @desc Register User
- * @access public
- * @route /api/v1/auth/register
- * @methud POST
- */
+// const { Proprietor, Store } = require('../models');
 
 export const register = async (
-  req: any,
+  req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
-  const { name, fatherName, company, address, nid, mobile, ownerId } = req.body;
-
+) => {
   const session = await mongoose.startSession();
 
   try {
-    await session.startTransaction();
-    const user = await userService.userCreateService(req.body, session);
+    session.startTransaction();
+    // const proprietorCreate = await commonService.createService(
+    //   Proprietor,
+    //   false,
+    //   {},
+    //   null,
+    //   req.body,
+    //   session
+    // );
+    // const storeCreate = await commonService.createService(
+    //   Store,
+    //   false,
+    //   {},
+    //   null,
+    //   {
+    //     ...req.body,
+    //     proprietorID: proprietorCreate._id,
+    //   },
+    //   session
+    // );
 
-    const newOwner = new OwnerModel({
-      userId: user._id,
-      name,
-      fatherName,
-      company,
-      address,
-      nid,
-      mobile,
-      ownerId,
-    });
-
-    await newOwner.save({ session });
+    await userService.createUser(
+      {
+        // proprietorID: proprietorCreate._id,
+        // storeID: storeCreate._id,
+        ...req.body,
+      },
+      session
+    );
 
     await session.commitTransaction();
-    await session.endSession();
+    session.endSession();
 
-    res.send({
-      message: req.t('User Register Successfully'),
-    });
+    res
+      .status(httpStatus.CREATED)
+      .send({ message: req.t('Registration Successful') });
   } catch (error) {
     await session.abortTransaction();
-    await session.endSession();
+    session.endSession();
     next(error);
   }
 };
 
-/**
- * @desc Login User
- * @access public
- * @route /api/v1/auth/login
- * @methud POST
- */
-
-export const login = catchAsync(async (req: any, res: Response) => {
+export const login = catchAsync(async (req: Request, res: Response) => {
   const { mobile, password } = req.body;
-
-  const user = await authService.loginUserWithmobileAndPassword(
+  const user = await authService.loginUserWithMobileAndPassword(
     mobile,
     password
   );
-
-  const { _id, ownerId, ...others } = user[0];
-  const token = await createToken({ _id, ownerId });
-
-  res.send({
-    message: req.t('User Login Successfull'),
-    token: token,
-  });
+  const tokens = await tokenService.generateAuthTokens(user);
+  res.send({ tokens });
 });
 
-/**
- * @desc Fotget Password
- * @access public
- * @route /api/v1/auth/fotgetPassword/email
- * @methud GET
- */
-
-export const fotgetPassword = catchAsync(async (req: any, res: Response) => {
-  const { email } = req.params;
-
-  const { token, userName } = await authService.generateResetPasswordToken(
-    email
-  );
-
-  const emailSubject = `${APPLICATION_NAME} Email Verify Link`;
-  const emailText = `Hello ${userName}, Please Click here<a href="${
-    FORGET_VERIFY_URI + '/' + token
-  }">Link</a>`;
-
-  await sendMailUtility(email, emailSubject, emailText);
-
-  res.send({
-    message: req.t('Verification link has been sent to your email address.'),
-  });
+export const logout = catchAsync(async (req: Request, res: Response) => {
+  await authService.logout(req.body.refreshToken);
+  res.status(httpStatus.NO_CONTENT).send();
 });
 
-/**
- * @desc Verify Forget Token
- * @access public
- * @route /api/v1/auth/verifyForgetToken/email
- * @methud POST
- */
-
-export const verifyForgetToken = catchAsync(async (req: any, res: Response) => {
-  const { token, email } = req.params;
-  await authService.verifyForgetTokenService(token, email);
-
-  res.send({
-    message: req.t('Email verify Successfully'),
-    token: token,
-  });
+export const refreshTokens = catchAsync(async (req: Request, res: Response) => {
+  const tokens = await authService.refreshAuth(req.params.refreshToken);
+  res.send({ ...tokens });
 });
 
-/**
- * @desc Reset Password Token
- * @access public
- * @route /api/v1/auth/resetPasswordToken/email
- * @methud POST
- */
-
-export const resetPasswordToken = catchAsync(
-  async (req: any, res: Response) => {
-    const { token, email } = req.params;
-    const { password } = req.body;
-    await authService.resetPasswordTokenService(token, email, password);
-
-    res.send({
-      message: req.t('Password Reset Successfully'),
-      token: token,
-    });
+export const forgotPassword = catchAsync(
+  async (req: Request, res: Response) => {
+    const resetPasswordToken = await tokenService.generateResetPasswordToken(
+      req.body.email
+    );
+    await emailService.sendResetPasswordEmail(
+      req.body.email,
+      resetPasswordToken
+    );
+    res.status(httpStatus.NO_CONTENT).send();
   }
 );
+
+export const resetPassword = catchAsync(async (req: any, res: Response) => {
+  await authService.resetPassword(req.query.token, req.body.password);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+export const sendVerificationEmail = catchAsync(
+  async (req: any, res: Response) => {
+    const verifyEmailToken = await tokenService.generateVerifyEmailToken(
+      req.user.userID
+    );
+    await emailService.sendVerificationEmail(req.user.email, verifyEmailToken);
+    res.status(httpStatus.NO_CONTENT).send();
+  }
+);
+
+export const verifyEmail = catchAsync(async (req: any, res: Response) => {
+  await authService.verifyEmail(req.query.token);
+  res.status(httpStatus.NO_CONTENT).send();
+});

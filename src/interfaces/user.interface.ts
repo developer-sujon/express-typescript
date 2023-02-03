@@ -1,10 +1,12 @@
 //External Lib Import
-import { Document } from 'mongoose';
+import { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
-  name: String;
+  proprietorID: Schema.Types.ObjectId;
+  storeID: Schema.Types.ObjectId;
+  name: string;
   mobile: string;
   email: string;
   password: string;
-  role: String;
+  role: string;
 }

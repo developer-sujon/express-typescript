@@ -2,7 +2,7 @@
 import { Document, Schema } from 'mongoose';
 
 export interface IToken extends Document {
-  userId: Schema.Types.ObjectId;
+  userID: Schema.Types.ObjectId;
   token: string;
   email: string;
   type: string;

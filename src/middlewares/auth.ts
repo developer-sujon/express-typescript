@@ -1,50 +1,67 @@
 //External Lib Import
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import httpStatus from 'http-status';
+import passport from 'passport';
 
 //Internal Lib Import
-import * as userService from '../services/user.service';
-import { decodedToken } from '../utils/jwtToken';
 import CustomError from '../helpers/CustomError';
-import mongoose from 'mongoose';
+import { IUser } from './../interfaces/user.interface';
 
-const auth =
-  (roles: string[]) => async (req: any, res: Response, next: NextFunction) => {
+const verifyCallback =
+  (req: Request, resolve: any, reject: any) =>
+  async (err: string, user: IUser, info: string) => {
+    if (err || info || !user) {
+      return reject(
+        new CustomError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+      );
+    }
+    req.user = user;
+    resolve();
+  };
+
+export const auth =
+  () => async (req: Request, res: Response, next: NextFunction) => {
+    return new Promise((resolve, reject) => {
+      passport.authenticate(
+        'jwt',
+        { session: false },
+        verifyCallback(req, resolve, reject)
+      )(req, res, next);
+    })
+      .then(() => next())
+      .catch((err) => next(err));
+  };
+
+export const roles =
+  (roles: [string]) => async (req: any, res: Response, next: NextFunction) => {
     try {
-      const { authorization }: any = req.headers;
-      const token = authorization.split(' ')[1];
-
-      if (!token) {
-        return next(
-          new CustomError(
-            httpStatus.UNAUTHORIZED,
-            'Please login to access this resource.'
-          )
-        );
+      if (roles.indexOf(req.user.role) === -1) {
+        throw new CustomError(httpStatus.UNAUTHORIZED, `Forbidden`);
       }
-
-      const decoded: any = await decodedToken(token);
-
-      if (!decoded) {
-        return next(new CustomError(httpStatus.UNAUTHORIZED, 'Invalid token.'));
-      }
-
-      const user = await userService.userDetailsByPropertyService({
-        _id: new mongoose.Types.ObjectId(decoded._id),
-      });
-
-      if (roles.indexOf(user[0].role) === -1) {
-        return next(
-          new CustomError(httpStatus.UNAUTHORIZED, 'Not authorized.')
-        );
-      }
-
-      req.id = decoded._id;
-      req.ownerId = decoded.ownerId;
-      next();
-    } catch (err) {
-      return next(new CustomError(httpStatus.UNAUTHORIZED, 'Invalid token.'));
+      return next();
+    } catch (error) {
+      next(error);
     }
   };
 
-export default auth;
+const accessPermission =
+  (routePermission: string) =>
+  async (req: any, res: Response, next: NextFunction) => {
+    try {
+      if (req.user.role !== 'proprietor') {
+        // let permissions = await Staff.findOne({ userID: req.user._id }).select(
+        //   'permissions'
+        // );
+        // if (permissions.permissions[routePermission]) {
+        //   return next();
+        // }
+        // throw new CustomError(
+        //   httpStatus.UNAUTHORIZED,
+        //   `You don't have permission to this route`
+        // );
+      }
+      return next();
+    } catch (error) {
+      next(error);
+    }
+  };

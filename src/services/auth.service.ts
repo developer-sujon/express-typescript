@@ -2,139 +2,127 @@
 import httpStatus from 'http-status';
 
 //Internal Lib  import
+
 import * as userService from './user.service';
+import * as tokenService from './token.service';
+import { IUser } from '../interfaces/user.interface';
 import CustomError from '../helpers/CustomError';
-import { createToken } from '../utils/jwtToken';
-import { JWT_RESET_PASSWORD_EXPIRE_MINUTUS } from '../config/config';
-import { hashPassword, verifyPassword } from '../utils/bcrypt';
+import Token from '../models/token.model';
 import { tokenTypes } from '../config/token';
-import { addMinutes } from '../helpers/addMinit';
-import TokenModel from '../models/token.model';
-import UserModel from '../models/user.model';
 
-export const loginUserWithmobileAndPassword = async (
-  mobile: string,
+/**
+ * Login with email and password
+ */
+export const loginUserWithEmailAndPassword = async (
+  email: string,
   password: string
-): Promise<any> => {
-  const user = await userService.userDetailsByPropertyService({
-    mobile,
-  });
-
-  if (!user.length) {
-    throw new CustomError(httpStatus.NOT_FOUND, 'Mobile number not found');
-  }
-
-  if (!(await verifyPassword(password, user?.[0]?.password))) {
-    throw new CustomError(httpStatus.UNAUTHORIZED, 'The password is incorrect');
+): Promise<IUser> => {
+  const user = await userService.getUserByEmail(email);
+  if (!user || !(await user.isPasswordMatch(password))) {
+    throw new CustomError(
+      httpStatus.UNAUTHORIZED,
+      'Incorrect email or password'
+    );
   }
   return user;
 };
 
-export const generateResetPasswordToken = async (
-  email: string
-): Promise<any> => {
-  const user = await userService.userDetailsByPropertyService({ email });
-  if (!user.length) {
-    throw new CustomError(
-      httpStatus.NOT_FOUND,
-      'No users found with this email'
-    );
-  }
-
-  const expires = addMinutes(JWT_RESET_PASSWORD_EXPIRE_MINUTUS);
-  const resetPasswordToken = await createToken({ email });
-
-  const newToken = new TokenModel({
-    userId: user[0]._id,
-    email: user[0].email,
-    token: resetPasswordToken,
-    type: tokenTypes.RESET_PASSWORD,
-    expires,
-  });
-
-  await newToken.save();
-
-  return {
-    token: resetPasswordToken,
-    userName: user[0].name,
-  };
-};
-
-export const verifyForgetTokenService = async (
-  token: string,
-  email: string
-): Promise<any> => {
-  const user = await userService.userDetailsByPropertyService({ email });
-  if (!user.length) {
-    throw new CustomError(
-      httpStatus.NOT_FOUND,
-      'No users found with this email'
-    );
-  }
-
-  const validToken = await TokenModel.aggregate([
-    {
-      $match: {
-        token,
-        email,
-      },
-    },
-  ]);
-
-  if (!validToken.length) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Verify Token Not Valid');
-  }
-
-  const useToken = await TokenModel.aggregate([
-    {
-      $match: {
-        blacklisted: true,
-      },
-    },
-  ]);
-
-  if (useToken.length) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Verify Token already Use');
-  }
-
-  const expireToken = await TokenModel.aggregate([
-    {
-      $match: {
-        expires: { $lte: new Date().getTime() },
-      },
-    },
-  ]);
-
-  if (expireToken.length) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Verify Token expire');
-  }
-
-  return await TokenModel.updateOne(
-    { _id: validToken[0]._id },
-    { blacklisted: true }
-  );
-};
-
-export const resetPasswordTokenService = async (
-  token: string,
-  email: string,
+/**
+ * Login with mobile and password
+ */
+export const loginUserWithMobileAndPassword = async (
+  mobile: string,
   password: string
-): Promise<any> => {
-  const validToken = await TokenModel.aggregate([
-    {
-      $match: {
-        token,
-        email,
-        blacklisted: true,
-      },
-    },
-  ]);
+): Promise<IUser> => {
+  const user = await userService.getUserByMobile(mobile);
 
-  if (!validToken.length) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Verify Token Not Valid');
+  if (!user || !(await user.isPasswordMatch(password))) {
+    throw new CustomError(
+      httpStatus.UNAUTHORIZED,
+      'Incorrect mobile or password'
+    );
   }
+  return user;
+};
 
-  password = await hashPassword(password);
+/**
+ * Logout
+ */
+export const logout = async (refreshToken: string) => {
+  const refreshTokenDoc = await Token.findOne({
+    token: refreshToken,
+    type: tokenTypes.REFRESH,
+    blacklisted: false,
+  });
+  if (!refreshTokenDoc) {
+    throw new CustomError(httpStatus.NOT_FOUND, 'Not found');
+  }
+  await refreshTokenDoc.remove();
+};
 
-  return await UserModel.updateOne({ email }, { password });
+/**
+ * Refresh auth tokens
+ */
+export const refreshAuth = async (refreshToken: string): Promise<object> => {
+  try {
+    const refreshTokenDoc = await tokenService.verifyToken(
+      refreshToken,
+      tokenTypes.REFRESH
+    );
+
+    const user = await userService.userDetailsByPropertyService(
+      refreshTokenDoc.userID
+    );
+
+    if (!user) {
+      throw new Error();
+    }
+    await refreshTokenDoc.remove();
+    return tokenService.generateAuthTokens(user);
+  } catch (error) {
+    throw new CustomError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+  }
+};
+
+/**
+ * Reset password
+ */
+export const resetPassword = async (
+  resetPasswordToken: string,
+  newPassword: string
+) => {
+  try {
+    const resetPasswordTokenDoc = await tokenService.verifyToken(
+      resetPasswordToken,
+      tokenTypes.RESET_PASSWORD
+    );
+    const user = await userService.getUserById(resetPasswordTokenDoc._id);
+    if (!user) {
+      throw new Error();
+    }
+    await userService.updateUserById(user.id, { password: newPassword });
+    await Token.deleteMany({ user: user.id, type: tokenTypes.RESET_PASSWORD });
+  } catch (error) {
+    throw new CustomError(httpStatus.UNAUTHORIZED, 'Password reset failed');
+  }
+};
+
+/**
+ * Verify email
+ */
+export const verifyEmail = async (verifyEmailToken: string) => {
+  try {
+    const verifyEmailTokenDoc = await tokenService.verifyToken(
+      verifyEmailToken,
+      tokenTypes.VERIFY_EMAIL
+    );
+    const user = await userService.getUserById(verifyEmailTokenDoc._id);
+    if (!user) {
+      throw new Error();
+    }
+    await Token.deleteMany({ user: user.id, type: tokenTypes.VERIFY_EMAIL });
+    await userService.updateUserById(user.id, { isEmailVerified: true });
+  } catch (error) {
+    throw new CustomError(httpStatus.UNAUTHORIZED, 'Email verification failed');
+  }
 };
