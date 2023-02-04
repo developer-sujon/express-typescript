@@ -1,8 +1,8 @@
 //External Lib Import
-const httpStatus = require('http-status');
+import httpStatus from 'http-status';
 
 //Internal Lib Import
-const ApiError = require('../utils/ApiError');
+import CustomError from '../helpers/CustomError';
 
 export const createService = async (
   dataModel: any,
@@ -10,12 +10,12 @@ export const createService = async (
   uniqueValue: object,
   errorMessage: string,
   postBody: object,
-  session: any
+  session?: any
 ) => {
   const uniqueData = await dataModel.aggregate([{ $match: uniqueValue }]);
 
   if (unique && uniqueData.length > 0) {
-    throw new ApiError(httpStatus.BAD_REQUEST, errorMessage);
+    throw new CustomError(httpStatus.BAD_REQUEST, errorMessage);
   }
   const data = new dataModel(postBody);
 
@@ -96,7 +96,7 @@ export const updateService = async (
   const data = await dataModel.findOne(matchQuery);
 
   if (!data) {
-    throw new ApiError(httpStatus.BAD_REQUEST, errorMessage);
+    throw new CustomError(httpStatus.BAD_REQUEST, errorMessage);
   }
 
   Object.assign(data, postBody);
@@ -111,7 +111,7 @@ export const deleteService = async (
   const data = await dataModel.findOne(matchQuery);
 
   if (!data) {
-    throw new ApiError(httpStatus.BAD_REQUEST, errorMessage);
+    throw new CustomError(httpStatus.BAD_REQUEST, errorMessage);
   }
   return await dataModel.deleteMany(matchQuery);
 };

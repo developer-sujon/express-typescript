@@ -1,3 +1,4 @@
+import { NextFunction, Request, Response } from 'express';
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import CustomError from '../helpers/CustomError';
 import mongoose from 'mongoose';
@@ -6,7 +7,12 @@ import { IS_PRODUCTION, IS_TEST } from '../config/config';
 import logger from '../config/logger';
 import capitalizeFirstLetter from '../helpers/capitalizeFirstLetter';
 
-export const errorConverter = (err: any, req: any, res: any, next: any) => {
+export const errorConverter = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   let error = err;
   if (!(error instanceof CustomError)) {
     const statusCode =
@@ -19,7 +25,12 @@ export const errorConverter = (err: any, req: any, res: any, next: any) => {
   next(error);
 };
 
-export const errorHandler = (err: any, req: any, res: any, next: any) => {
+export const errorHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   let { statusCode, message } = err;
   if (IS_PRODUCTION && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;

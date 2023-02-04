@@ -6,6 +6,7 @@ import cors from 'cors';
 import compression from 'compression';
 import expressMongoSanitize from 'express-mongo-sanitize';
 import httpStatus from 'http-status';
+import passport from 'passport';
 
 //Internal Lib  import
 import routes from './routes/v1';
@@ -14,6 +15,7 @@ import { errorConverter, errorHandler } from './middlewares/error';
 import { morganSuccessHandler, morganErrorHandler } from './config/morgan';
 import { IS_TEST, APP_PREFIX_PATH } from './config/config';
 import initI18next from './locales/i18n';
+import { jwtStrategy } from './config/passport';
 
 const app: Application = express();
 
@@ -40,6 +42,10 @@ app.use(compression());
 
 // enable cors
 app.use(cors());
+
+// jwt authentication
+app.use(passport.initialize());
+passport.use('jwt', jwtStrategy);
 
 //i18next Internationalized
 initI18next(app);

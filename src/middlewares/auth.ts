@@ -15,6 +15,7 @@ const verifyCallback =
         new CustomError(httpStatus.UNAUTHORIZED, 'Please authenticate')
       );
     }
+
     req.user = user;
     resolve();
   };
