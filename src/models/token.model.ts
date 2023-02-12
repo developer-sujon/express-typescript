@@ -2,8 +2,9 @@
 import { Schema, model } from 'mongoose';
 
 //Internal Lib Import
+import { toJSON, paginate } from './plugins';
 import { tokenValues } from '../config/token';
-import { IToken } from '../interfaces/token.interface';
+import { IToken } from '../interfaces';
 
 const tokenSchema = new Schema(
   {
@@ -37,6 +38,13 @@ const tokenSchema = new Schema(
   }
 );
 
+// add plugin that converts mongoose to json
+tokenSchema.plugin(toJSON);
+tokenSchema.plugin(paginate);
+
+/**
+ * @typedef Token
+ */
 const Token = model<IToken>('Token', tokenSchema);
 
 export default Token;

@@ -9,14 +9,21 @@ export const register = {
     storeName: Joi.string().min(3).max(50).required(),
     name: Joi.string().min(3).max(30).required(),
     mobile: Joi.string().required().custom(mobile),
-    email: Joi.string().required().email(),
+    email: Joi.string().required().custom(email),
     address: Joi.string().min(3).max(100).required(),
     district: Joi.string().min(3).max(30).required(),
     thana: Joi.string().min(3).max(30).required(),
-    reference: Joi.object({
-      name: Joi.string().min(3).max(30).required(),
-      mobile: Joi.string().required().custom(mobile),
-    }),
+    password: Joi.string().required().custom(password),
+    reference: Joi.object()
+      .keys({
+        name: Joi.string().min(3).max(30),
+        mobile: Joi.string().custom(mobile),
+        relation: Joi.string().min(3).max(30),
+        address: Joi.string().min(3).max(100),
+        district: Joi.string().min(3).max(30),
+        thana: Joi.string().min(3).max(30),
+      })
+      .required(),
   }),
 };
 

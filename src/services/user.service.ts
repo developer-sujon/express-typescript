@@ -5,30 +5,23 @@ import { ObjectId } from 'mongodb';
 //Internal Lib Import
 import User from '../models/user.model';
 import CustomError from '../helpers/CustomError';
-import { IUser } from '../interfaces/user.interface';
+import { IUser } from '../interfaces';
 
-/**
- * Create a user
- */
-export const createUser = async (
-  userBody: any,
-  session: any
-): Promise<IUser> => {
-  userBody.password = 'pass1234';
+// /**
+//  * Create a user
+//  */
+// export const createUser = async (userBody: object): Promise<IUser> => {
+//   userBody.password = 'pass1234';
 
-  if (await User.isEmailTaken(userBody.email)) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Email already taken');
-  }
-  if (await User.isMobileTaken(userBody.mobile)) {
-    throw new CustomError(httpStatus.BAD_REQUEST, 'Mobile already taken');
-  }
+//   if (await User.isEmailTaken(userBody.email)) {
+//     throw new CustomError(httpStatus.BAD_REQUEST, 'Email already taken');
+//   }
+//   if (await User.isMobileTaken(userBody.mobile)) {
+//     throw new CustomError(httpStatus.BAD_REQUEST, 'Mobile already taken');
+//   }
 
-  if (session) {
-    return new User(userBody).save({ session });
-  } else {
-    return User.create(userBody);
-  }
-};
+//   return User.create(userBody);
+// };
 
 /**
  * Get user by id

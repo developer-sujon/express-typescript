@@ -5,13 +5,9 @@ import httpStatus from 'http-status';
 
 //Internal Lib Import
 import catchAsync from '../helpers/catchAsync';
-import * as authService from '../services/auth.service';
-import * as userService from '../services/user.service';
+import { authService } from '../services';
 import * as tokenService from '../services/token.service';
 import * as emailService from '../services/email.service';
-import * as commonService from '../services/common.service';
-
-// const { Proprietor, Store } = require('../models');
 
 export const register = async (
   req: Request,
@@ -19,47 +15,17 @@ export const register = async (
   next: NextFunction
 ) => {
   const session = await mongoose.startSession();
-
   try {
     session.startTransaction();
-    // const proprietorCreate = await commonService.createService(
-    //   Proprietor,
-    //   false,
-    //   {},
-    //   null,
-    //   req.body,
-    //   session
-    // );
-    // const storeCreate = await commonService.createService(
-    //   Store,
-    //   false,
-    //   {},
-    //   null,
-    //   {
-    //     ...req.body,
-    //     proprietorID: proprietorCreate._id,
-    //   },
-    //   session
-    // );
-
-    await userService.createUser(
-      {
-        // proprietorID: proprietorCreate._id,
-        // storeID: storeCreate._id,
-        ...req.body,
-      },
-      session
-    );
-
+    await authService.registerUser(req, session);
     await session.commitTransaction();
-    session.endSession();
-
+    await session.endSession();
     res
       .status(httpStatus.CREATED)
-      .send({ message: req.t('Registration Successful') });
+      .json({ message: 'Store Create Successfully Pasword pass1234' });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
+    await session.endSession();
     next(error);
   }
 };
@@ -76,7 +42,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
 
 export const logout = catchAsync(async (req: Request, res: Response) => {
   await authService.logout(req.body.refreshToken);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(httpStatus.NO_CONTENT).json({ message: 'Logout Successfull' });
 });
 
 export const refreshTokens = catchAsync(async (req: Request, res: Response) => {

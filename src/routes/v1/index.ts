@@ -3,8 +3,8 @@ import express from 'express';
 
 //Internal Lib Import
 import authRoute from './auth.route';
-import conversationRoute from './conversation.route';
-import messageRoute from './message.route';
+import roleRoute from './role.route';
+import staffRoute from './staff.route';
 
 const router = express.Router();
 
@@ -14,12 +14,12 @@ const defaultRoutes = [
     route: authRoute,
   },
   {
-    path: '/conversation',
-    route: conversationRoute,
+    path: '/role',
+    route: roleRoute,
   },
   {
-    path: '/message',
-    route: messageRoute,
+    path: '/staff',
+    route: staffRoute,
   },
 ];
 

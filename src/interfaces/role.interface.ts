@@ -1,11 +1,11 @@
 //External Lib Import
 import { Document, Schema } from 'mongoose';
 
-export default interface IUser extends Document {
+export default interface IRole extends Document {
   proprietorID: Schema.Types.ObjectId;
   storeID: Schema.Types.ObjectId;
-  mobile: string;
-  email: string;
-  password: string;
-  role: string;
+  userID: Schema.Types.ObjectId;
+  name: string;
+  permissions: object;
+  status: boolean;
 }

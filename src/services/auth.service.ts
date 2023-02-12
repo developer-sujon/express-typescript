@@ -1,14 +1,48 @@
 //External Lib  import
 import httpStatus from 'http-status';
+import { Request } from 'express';
 
 //Internal Lib  import
-
 import * as userService from './user.service';
 import * as tokenService from './token.service';
-import { IUser } from '../interfaces/user.interface';
+import { IUser } from '../interfaces';
 import CustomError from '../helpers/CustomError';
 import Token from '../models/token.model';
 import { tokenTypes } from '../config/token';
+import { User, Proprietor, Store } from '../models';
+
+/**
+ * Register User
+ */
+export const registerUser = async (
+  request: Request,
+  session: any
+): Promise<IUser> => {
+  const password = 'pass1234';
+
+  if (await User.isEmailTaken(request.body.email)) {
+    throw new CustomError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  if (await User.isMobileTaken(request.body.mobile)) {
+    throw new CustomError(httpStatus.BAD_REQUEST, 'Mobile already taken');
+  }
+
+  const proprietor = await new Proprietor(request.body).save({ session });
+  const store = await new Store({
+    proprietorID: proprietor._id,
+    ...request.body,
+  }).save({ session });
+
+  return await new User(
+    {
+      proprietorID: proprietor._id,
+      storeID: store._id,
+      password,
+      ...request.body,
+    },
+    { session }
+  ).save();
+};
 
 /**
  * Login with email and password

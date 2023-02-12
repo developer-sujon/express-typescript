@@ -5,7 +5,7 @@ import passport from 'passport';
 
 //Internal Lib Import
 import CustomError from '../helpers/CustomError';
-import { IUser } from './../interfaces/user.interface';
+import { IUser } from './../interfaces';
 
 const verifyCallback =
   (req: Request, resolve: any, reject: any) =>
@@ -16,7 +16,9 @@ const verifyCallback =
       );
     }
 
-    req.user = user;
+    req.proprietorID = user.proprietorID;
+    req.storeID = user.storeID;
+    req.userID = user._id;
     resolve();
   };
 
@@ -45,7 +47,7 @@ export const roles =
     }
   };
 
-const accessPermission =
+export const accessPermission =
   (routePermission: string) =>
   async (req: any, res: Response, next: NextFunction) => {
     try {

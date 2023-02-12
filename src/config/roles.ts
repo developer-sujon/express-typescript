@@ -1,11 +1,4 @@
-let allRoles: {
-  proprietor: string[];
-  admin: string[];
-  manager: string[];
-  owner: string[];
-};
-
-allRoles = {
+let allRoles: Object = {
   proprietor: [],
   admin: [],
   manager: [],

@@ -4,8 +4,9 @@ import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
 
 //Internal Lib  import
+import { toJSON, paginate } from './plugins';
 import { roles } from '../config/roles';
-import { IUser } from '../interfaces/user.interface';
+import { IUser } from '../interfaces';
 
 export interface IUserDocument extends IUser {
   isPasswordMatch(password: string): Promise<boolean>;
@@ -18,21 +19,15 @@ export interface IUserModel extends Model<IUserDocument> {
 
 const userSchema: Schema = new Schema(
   {
-    // proprietorID: {
-    //   type: Schema.Types.ObjectId,
-    //   required: true,
-    //   ref: 'Proprietor',
-    // },
-    // storeID: {
-    //   type: Schema.Types.ObjectId,
-    //   required: true,
-    //   ref: 'Store',
-    // },
-    name: {
-      type: String,
-      trim: true,
-      max: 50,
+    proprietorID: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: 'Proprietor',
+    },
+    storeID: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'Store',
     },
     mobile: {
       type: String,
@@ -119,6 +114,10 @@ userSchema.pre('save', async function (next) {
   }
   next();
 });
+
+// add plugin that converts mongoose to json
+userSchema.plugin(toJSON);
+userSchema.plugin(paginate);
 
 /**
  * @typedef User

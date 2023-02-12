@@ -7,11 +7,10 @@ import { ObjectId } from 'mongodb';
 //Internal Lib Import
 import * as config from '../config/config';
 import * as userService from './user.service';
-import ApiError from '../helpers/CustomError';
 import { tokenTypes } from '../config/token';
-import { IToken } from '../interfaces/token.interface';
-import { IUser } from './../interfaces/user.interface';
-import Token from '../models/token.model';
+import { IToken, IUser } from '../interfaces';
+import { Token } from '../models';
+import ApiError from '../helpers/CustomError';
 
 /**
  * Generate token
